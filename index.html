@@ -52,6 +52,8 @@
     <input id="searchName" placeholder="Search Name..." oninput="loadProfile()" />
     <textarea id="editQuals" placeholder="Edit qualifications (comma separated)"></textarea>
     <button onclick="saveQuals()">Save Qualifications</button>
+    <button onclick="removeUserData()">Remove User Data</button>
+    <button onclick="removeAllMissions()">Remove All Mission Data (Except cap-airplane)</button>
 
     <div id="resultBox">
       <h3>Current Qualifications</h3>
@@ -114,6 +116,32 @@
       const list = quals.split(",").map(q => q.trim());
       db.ref(`profiles/${name}`).set({ qualifications: list });
       loadProfile();
+    }
+
+    function removeUserData() {
+      const name = document.getElementById("searchName").value.trim();
+      if (!name) return alert("Enter a user name to delete.");
+      if (confirm(`Are you sure you want to delete all data for "${name}"?`)) {
+        db.ref(`profiles/${name}`).remove().then(() => {
+          alert("User data removed.");
+          document.getElementById("qualList").innerHTML = "";
+          document.getElementById("editQuals").value = "";
+        });
+      }
+    }
+
+    function removeAllMissions() {
+      if (!confirm("This will remove ALL mission data EXCEPT for 'cap-airplane'. Are you sure?")) return;
+      db.ref("missions").once("value").then(snapshot => {
+        const missions = snapshot.val();
+        if (!missions) return alert("No missions found.");
+        for (const key in missions) {
+          if (key !== "cap-airplane") {
+            db.ref(`missions/${key}`).remove();
+          }
+        }
+        alert("Mission data removed (except 'cap-airplane').");
+      });
     }
   </script>
 </body>
